@@ -226,6 +226,36 @@
                 gap: 10px;
             }
         }
+        /* 烟花特效样式 */
+        .firework {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* 粒子样式 */
+        .firework-particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* 爆炸动画 */
+        @keyframes explode {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0);
+            }
+            10% {
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--end-x), var(--end-y)) scale(var(--final-scale));
+            }
+        }
     </style>
 </head>
 <body>
@@ -346,6 +376,184 @@
                         confetti.remove();
                     }, (duration + delay) * 1000);
                 }, i * 10); // 每个纸屑延迟10ms出现
+            }
+        }
+
+        // 烟花特效函数
+        function createFireworks() {
+            // 定义颜色
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', 
+                           '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50',
+                           '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800'];
+            
+            // 获取游戏容器元素
+            const gameContainer = document.querySelector('.container');
+            const containerRect = gameContainer.getBoundingClientRect();
+            
+            // 设置游戏容器为相对定位，以便烟花特效基于容器定位
+            gameContainer.style.position = 'relative';
+            
+            // 生成10个烟花
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    // 创建烟花的起始位置（在游戏容器内底部）
+                    const startX = Math.random() * (containerRect.width - 40) + 20;
+                    const startY = containerRect.height - 20;
+                    
+                    // 创建烟花的爆炸位置（在游戏容器内上方区域）
+                    const explosionX = Math.random() * (containerRect.width - 80) + 40;
+                    const explosionY = Math.random() * (containerRect.height * 0.6) + 40; // 爆炸在容器上方60%的区域
+                    
+                    // 创建烟花元素
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    firework.style.left = `${startX}px`;
+                    firework.style.top = `${startY}px`;
+                    
+                    // 将烟花添加到游戏容器而不是body
+                    gameContainer.appendChild(firework);
+                    
+                    // 发射动画
+                    let startTime = null;
+                    const duration = Math.random() * 0.5 + 0.5; // 发射动画持续0.5-1秒
+                    
+                    function animate(timestamp) {
+                        if (!startTime) startTime = timestamp;
+                        const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
+                        
+                        // 计算当前位置（使用easeOut动画效果）
+                        const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+                        const currentX = startX + (explosionX - startX) * easeOutProgress;
+                        const currentY = startY + (explosionY - startY) * easeOutProgress;
+                        
+                        // 更新位置
+                        firework.style.left = `${currentX}px`;
+                        firework.style.top = `${currentY}px`;
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            // 爆炸效果
+                            explodeFirework(currentX, currentY);
+                            
+                            // 移除发射轨迹
+                            firework.remove();
+                        }
+                    }
+                    
+                    // 开始动画
+                    requestAnimationFrame(animate);
+                    
+                }, i * 300); // 每个烟花延迟300ms发射
+            }
+        }
+        
+        // 爆炸效果
+        function explodeFirework(x, y) {
+            // 定义颜色
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', 
+                           '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50',
+                           '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800'];
+            
+            // 随机选择一种主颜色
+            const mainColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // 生成50-80个爆炸粒子 (增加粒子数量使爆炸更明显)
+            const particleCount = Math.floor(Math.random() * 31) + 50;
+            
+            // 为了让爆炸更自然，分批次发射粒子
+            for (let i = 0; i < particleCount; i++) {
+                setTimeout(() => {
+                    // 随机选择一个颜色，60%概率使用主颜色，40%概率使用其他颜色
+                    const color = Math.random() < 0.6 ? mainColor : colors[Math.floor(Math.random() * colors.length)];
+                    
+                    // 随机生成爆炸角度和距离
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 100 + 50; // 粒子飞散距离50-150px
+                    
+                    // 计算结束位置
+                    const endX = Math.cos(angle) * distance;
+                    const endY = Math.sin(angle) * distance + (Math.random() * 30 - 15); // 添加一些垂直随机性
+                    
+                    // 创建粒子元素
+                    const particle = document.createElement('div');
+                    particle.className = 'firework-particle';
+                    particle.style.left = `${x}px`;
+                    particle.style.top = `${y}px`;
+                    
+                    // 随机粒子大小
+                    const size = Math.random() * 5 + 2; // 2-7px
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.backgroundColor = color;
+                    
+                    // 随机粒子动画持续时间
+                    const duration = Math.random() * 0.8 + 0.7; // 0.7-1.5秒
+                    
+                    // 设置CSS变量用于动画
+                    particle.style.setProperty('--end-x', `${endX}px`);
+                    particle.style.setProperty('--end-y', `${endY}px`);
+                    particle.style.setProperty('--final-scale', Math.random() * 0.5 + 0.5); // 最终缩放
+                    
+                    // 设置动画
+                    particle.style.animation = `explode ${duration}s forwards ease-out`;
+                    
+                    // 添加到游戏容器而不是body
+                    const gameContainer = document.querySelector('.container');
+                    gameContainer.appendChild(particle);
+                    
+                    // 动画结束后移除粒子
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.remove();
+                        }
+                    }, duration * 1000);
+                    
+                    // 小概率在粒子移动过程中创建二次爆炸
+                    if (Math.random() < 0.1) { // 10%概率产生二次爆炸
+                        setTimeout(() => {
+                            createSecondaryBurst(x + endX * 0.6, y + endY * 0.6, color);
+                        }, duration * 1000 * 0.6);
+                    }
+                }, i * 5); // 每个粒子间隔5ms发射，形成连续爆炸效果
+            }
+        }
+        
+        // 二次爆炸效果
+        function createSecondaryBurst(x, y, color) {
+            // 为二次爆炸创建8个更小的粒子
+            for (let i = 0; i < 8; i++) {
+                const angle = (Math.PI * 2 / 8) * i + Math.random() * 0.5;
+                const distance = Math.random() * 30 + 20;
+                const endX = Math.cos(angle) * distance;
+                const endY = Math.sin(angle) * distance;
+                
+                const particle = document.createElement('div');
+                particle.className = 'firework-particle';
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                
+                const size = Math.random() * 3 + 1; // 1-4px
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.backgroundColor = color;
+                
+                const duration = Math.random() * 0.4 + 0.3; // 0.3-0.7秒
+                
+                particle.style.setProperty('--end-x', `${endX}px`);
+                particle.style.setProperty('--end-y', `${endY}px`);
+                particle.style.setProperty('--final-scale', Math.random() * 0.5);
+                
+                particle.style.animation = `explode ${duration}s forwards ease-out`;
+                
+                const gameContainer = document.querySelector('.container');
+                gameContainer.appendChild(particle);
+                
+                setTimeout(() => {
+                    if (particle.parentNode) {
+                        particle.remove();
+                    }
+                }, duration * 1000);
             }
         }
 
@@ -526,8 +734,14 @@
                 // 添加胜利动画
                 document.querySelector('.container').classList.add('winner');
                 
-                // 触发撒花特效
-                createConfetti();
+                // 随机选择一个特效（撒花或烟花）
+                if (Math.random() > 0.5) {
+                    // 触发撒花特效
+                    createConfetti();
+                } else {
+                    // 触发烟花特效
+                    createFireworks();
+                }
                 
                 // 更改按钮文本为"再来一次"
                 document.getElementById('actionButton').textContent = '再来一次';
