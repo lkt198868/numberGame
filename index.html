@@ -257,9 +257,50 @@
     <script>
         // 游戏状态
         let targetNumber = 0;
+        let previousTargetNumber = -1; // 记录上一次的目标数字，初始化为-1确保与第一次生成的目标数字不同
         let numbers = [];
         let selectedNumbers = [];
         let gameWon = false;
+        
+        // 回溯算法查找是否存在一组特定数量的数字，其和等于目标数字
+        function findSolution(numbers, count, target, result) {
+            // 清空结果数组
+            result.length = 0;
+            
+            // 调用回溯函数
+            return backtrack(numbers, 0, 0, count, target, [], result);
+        }
+        
+        // 回溯辅助函数
+        function backtrack(numbers, startIndex, currentSum, count, target, path, result) {
+            // 如果当前路径长度等于要求的数量，且和等于目标，找到解
+            if (path.length === count && currentSum === target) {
+                // 将找到的解复制到结果数组
+                result.push(...path.slice());
+                return true;
+            }
+            
+            // 如果路径长度已达到要求或和已经超过目标，停止探索
+            if (path.length >= count || currentSum > target) {
+                return false;
+            }
+            
+            // 尝试从startIndex开始选择数字
+            for (let i = startIndex; i < numbers.length; i++) {
+                // 添加当前数字到路径
+                path.push(i);
+                
+                // 递归探索
+                if (backtrack(numbers, i + 1, currentSum + numbers[i], count, target, path, result)) {
+                    return true; // 找到解，提前返回
+                }
+                
+                // 回溯，移除当前数字
+                path.pop();
+            }
+            
+            return false; // 未找到解
+        }
 
         // 撒花特效函数
         function createConfetti() {
@@ -314,55 +355,67 @@
             selectedNumbers = [];
             gameWon = false;
             
-            // 生成随机数字组 (6-10个数字，范围1-9)
+            // 生成目标数字 (5-10)，确保与上一次不同
+            do {
+                targetNumber = Math.floor(Math.random() * 6) + 5;
+            } while (targetNumber === previousTargetNumber);
+            
+            // 更新上一次的目标数字为当前目标数字
+            previousTargetNumber = targetNumber;
+            
+            // 生成随机数字组 (6-10个数字，范围2-9，且不包含目标数字)
             const count = Math.floor(Math.random() * 5) + 6; // 6-10个数字
             numbers = [];
             
             for (let i = 0; i < count; i++) {
-                numbers.push(Math.floor(Math.random() * 9) + 1); // 1-9的随机数
+                let num;
+                do {
+                    num = Math.floor(Math.random() * 8) + 2; // 2-9的随机数
+                } while (num === targetNumber); // 确保不等于目标数字
+                numbers.push(num);
             }
             
-            // 确保至少有一个解：随机选择2-4个数字的和作为目标，但不超过10
-            targetNumber = 0;
+            // 确保至少有一个解：随机选择2-4个数字的和作为目标（现在目标已确定，要确保数字中存在解）
             const solutionIndices = [];
             
-            // 随机选择不重复的索引，直到和接近但不超过10
+            // 检查是否存在一组数字的和等于目标数字
+            let hasSolution = false;
             let attempts = 0;
-            while (targetNumber <= 5 && attempts < 20) { // 确保目标数字至少大于5，但不超过10
-                solutionIndices.length = 0; // 清空数组
-                targetNumber = 0;
+            
+            // 尝试生成一个解，如果没有找到解，则重新生成数字
+            while (!hasSolution && attempts < 10) {
+                // 尝试找到2-4个数字的组合，和等于目标数字
+                for (let numCount = 2; numCount <= 4 && !hasSolution; numCount++) {
+                    // 使用回溯法查找是否有解
+                    hasSolution = findSolution(numbers, numCount, targetNumber, solutionIndices);
+                }
                 
-                const solutionCount = Math.floor(Math.random() * 3) + 2; // 2-4个数字
-                
-                // 随机选择不重复的索引
-                while (solutionIndices.length < solutionCount) {
-                    const index = Math.floor(Math.random() * numbers.length);
-                    if (!solutionIndices.includes(index)) {
-                        solutionIndices.push(index);
-                        targetNumber += numbers[index];
-                        
-                        // 如果和已经超过10，重新开始
-                        if (targetNumber > 10) {
-                            break;
-                        }
+                // 如果没有解，重新生成数字
+                if (!hasSolution) {
+                    numbers = [];
+                    for (let i = 0; i < count; i++) {
+                        let num;
+                        do {
+                            num = Math.floor(Math.random() * 8) + 2; // 2-9的随机数
+                        } while (num === targetNumber); // 确保不等于目标数字
+                        numbers.push(num);
                     }
                 }
                 
                 attempts++;
             }
             
-            // 如果仍然没有合适的目标数字，使用简单方法
-            if (targetNumber <= 5 || targetNumber > 10) {
-                solutionIndices.length = 0;
-                targetNumber = 0;
+            // 如果仍然没有找到解，添加一些更可能形成解的数字
+            if (!hasSolution) {
+                // 添加两个较小的数字，使它们的和等于目标数字
+                const num1 = Math.floor(Math.random() * (targetNumber - 3)) + 2; // 2到(targetNumber-2)的随机数
+                const num2 = targetNumber - num1;
                 
-                // 选择前2-3个数字，确保和不超过10
-                const solutionCount = Math.floor(Math.random() * 2) + 2; // 2-3个数字
-                for (let i = 0; i < solutionCount && i < numbers.length; i++) {
-                    if (targetNumber + numbers[i] <= 10) {
-                        solutionIndices.push(i);
-                        targetNumber += numbers[i];
-                    }
+                // 确保两个数字都符合要求
+                if (num2 >= 2 && num2 <= 9 && num2 !== targetNumber) {
+                    // 移除两个现有的数字并添加这两个新数字
+                    numbers.splice(0, 2);
+                    numbers.push(num1, num2);
                 }
             }
             
