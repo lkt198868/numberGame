@@ -2,8 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>10以内加减法练习</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>数字求和游戏</title>
     <style>
         * {
             box-sizing: border-box;
@@ -44,11 +47,33 @@
             font-size: 1.1rem;
         }
 
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .target-display {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .current-sum {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
         .controls {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         button {
@@ -66,6 +91,28 @@
             background-color: #2980b9;
         }
 
+        /* 链接按钮样式（用于页面跳转） */
+        .link-btn {
+            display: inline-block;
+            background-color: #9b59b6;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            transition: background-color 0.3s;
+        }
+
+        .link-btn:hover {
+            background-color: #7d3c98;
+        }
+
+        .nav-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
         .check-btn {
             background-color: #27ae60;
         }
@@ -74,103 +121,86 @@
             background-color: #229954;
         }
 
-        .refresh-btn {
+        .reset-btn {
             background-color: #e74c3c;
         }
 
-        .refresh-btn:hover {
+        .reset-btn:hover {
             background-color: #c0392b;
         }
 
-        .score-display {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #2c3e50;
-            height: 30px;
-        }
-
-        .questions-container {
+        .numbers-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
         }
 
-        .question-card {
+        .number-card {
             background-color: #f9f9f9;
             border-radius: 8px;
             padding: 15px;
-            border-left: 5px solid #3498db;
-            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
         }
 
-        .question-card:hover {
+        .number-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .question-card.correct {
-            border-left-color: #27ae60;
-            background-color: #e8f8f5;
+        .number-card.selected {
+            background-color: #3498db;
+            color: white;
+            border-color: #2980b9;
+            transform: scale(1.05);
         }
 
-        .question-card.incorrect {
-            border-left-color: #e74c3c;
-            background-color: #fdedec;
-        }
-
-        .question {
+        .message {
+            text-align: center;
             font-size: 1.2rem;
-            margin-bottom: 10px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            min-height: 60px;
             display: flex;
             align-items: center;
+            justify-content: center;
         }
 
-        .question-number {
-            font-weight: bold;
-            margin-right: 10px;
-            color: #3498db;
-        }
-
-        .answer-input {
-            width: 80px;
-            padding: 8px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-size: 1.1rem;
-            text-align: center;
-            margin-left: 10px;
-            transition: border-color 0.3s;
-        }
-
-        .answer-input:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        .answer-input.correct {
-            border-color: #27ae60;
+        .message.success {
             background-color: #e8f8f5;
-        }
-
-        .answer-input.incorrect {
-            border-color: #e74c3c;
-            background-color: #fdedec;
-        }
-
-        .result {
-            margin-top: 10px;
-            font-weight: bold;
-            height: 20px;
-        }
-
-        .correct-result {
             color: #27ae60;
+            border: 1px solid #27ae60;
         }
 
-        .incorrect-result {
+        .message.error {
+            background-color: #fdedec;
             color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .message.info {
+            background-color: #e3f2fd;
+            color: #3498db;
+            border: 1px solid #3498db;
+        }
+
+        /* 胜利动画 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .winner {
+            animation: pulse 0.5s ease-in-out 3;
         }
 
         /* 撒花特效样式 */
@@ -205,12 +235,47 @@
         }
 
         @media (max-width: 600px) {
-            .questions-container {
-                grid-template-columns: 1fr;
+            .numbers-container {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
             }
             
             h1 {
                 font-size: 2rem;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        /* 烟花特效样式 */
+        .firework {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* 粒子样式 */
+        .firework-particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* 爆炸动画 */
+        @keyframes explode {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0);
+            }
+            10% {
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--end-x), var(--end-y)) scale(var(--final-scale));
             }
         }
     </style>
@@ -218,176 +283,310 @@
 <body>
     <div class="container">
         <header>
-            <h1>10以内加减法练习</h1>
-            <p class="subtitle">完成下面的6道数学题，然后点击"批改"查看结果</p>
+            <h1>数字求和游戏</h1>
+            <p class="subtitle">选择数字，使它们的和等于目标数字</p>
         </header>
 
-        <div class="controls">
-            <button class="refresh-btn" onclick="generateQuestions()">刷新题目</button>
-            <button class="check-btn" onclick="checkAnswers()">批改答案</button>
+        <div class="nav-controls">
+            <a href="index.html" class="link-btn">返回首页</a>
         </div>
 
-        <div class="score-display" id="scoreDisplay"></div>
+        <div class="game-info">
+            <div class="target-display">目标数字: <span id="targetNumber">0</span></div>
+            <div class="current-sum">当前和: <span id="currentSum">0</span></div>
+        </div>
 
-        <div class="questions-container" id="questionsContainer">
-            <!-- 题目将通过JavaScript动态生成 -->
+        <div class="message info" id="message">选择一些数字，使它们的和等于目标数字</div>
+
+        <div class="controls">
+            <button id="actionButton">检查答案</button>
+        </div>
+
+        <div class="numbers-container" id="numbersContainer">
+            <!-- 数字卡片将通过JavaScript动态生成 -->
         </div>
     </div>
 
     <!-- 撒花特效容器 -->
     <div class="confetti-container" id="confettiContainer"></div>
 
+    <script src="effects.js"></script>
     <script>
-        // 存储题目和答案
-        let questions = [];
+        // 游戏状态
+        let targetNumber = 0;
+        let previousTargetNumber = -1; // 记录上一次的目标数字，初始化为-1确保与第一次生成的目标数字不同
+        let numbers = [];
+        let selectedNumbers = [];
+        let gameWon = false;
+        
+        // 回溯算法查找是否存在一组特定数量的数字，其和等于目标数字
+        function findSolution(numbers, count, target, result) {
+            // 清空结果数组
+            result.length = 0;
+            
+            // 调用回溯函数
+            return backtrack(numbers, 0, 0, count, target, [], result);
+        }
+        
+        // 回溯辅助函数
+        function backtrack(numbers, startIndex, currentSum, count, target, path, result) {
+            // 如果当前路径长度等于要求的数量，且和等于目标，找到解
+            if (path.length === count && currentSum === target) {
+                // 将找到的解复制到结果数组
+                result.push(...path.slice());
+                return true;
+            }
+            
+            // 如果路径长度已达到要求或和已经超过目标，停止探索
+            if (path.length >= count || currentSum > target) {
+                return false;
+            }
+            
+            // 尝试从startIndex开始选择数字
+            for (let i = startIndex; i < numbers.length; i++) {
+                // 添加当前数字到路径
+                path.push(i);
+                
+                // 递归探索
+                if (backtrack(numbers, i + 1, currentSum + numbers[i], count, target, path, result)) {
+                    return true; // 找到解，提前返回
+                }
+                
+                // 回溯，移除当前数字
+                path.pop();
+            }
+            
+            return false; // 未找到解
+        }
 
-        // 撒花特效函数
-        function createConfetti() {
-            const confettiContainer = document.getElementById('confettiContainer');
-            confettiContainer.innerHTML = ''; // 清空之前的撒花
+        // 以上特效方法已移至 effects.js（createConfetti / createFireworks）
+
+        // 初始化游戏
+        function initGame() {
+            // 重置游戏状态
+            selectedNumbers = [];
+            gameWon = false;
             
-            // 创建多种颜色的纸屑
-            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', 
-                           '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50',
-                           '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800'];
+            // 生成目标数字 (5-10)，确保与上一次不同
+            do {
+                targetNumber = Math.floor(Math.random() * 6) + 5;
+            } while (targetNumber === previousTargetNumber);
             
-            // 创建100个纸屑
-            for (let i = 0; i < 100; i++) {
-                setTimeout(() => {
-                    const confetti = document.createElement('div');
-                    confetti.className = 'confetti';
+            // 更新上一次的目标数字为当前目标数字
+            previousTargetNumber = targetNumber;
+            
+            // 生成随机数字组 (6-9个数字，范围2-9，且不包含目标数字)
+            const count = Math.floor(Math.random() * 4) + 6; // 6-9个数字
+            numbers = [];
+            
+            for (let i = 0; i < count; i++) {
+                let num;
+                do {
+                    num = Math.floor(Math.random() * 8) + 2; // 2-9的随机数
+                } while (num === targetNumber); // 确保不等于目标数字
+                numbers.push(num);
+            }
+            
+            // 确保至少有一个解：随机选择2-4个数字的和作为目标（现在目标已确定，要确保数字中存在解）
+            const solutionIndices = [];
+            
+            // 检查是否存在一组数字的和等于目标数字
+            let hasSolution = false;
+            let attempts = 0;
+            
+            // 尝试生成一个解，如果没有找到解，则重新生成数字
+            while (!hasSolution && attempts < 10) {
+                // 尝试找到2-4个数字的组合，和等于目标数字
+                for (let numCount = 2; numCount <= 4 && !hasSolution; numCount++) {
+                    // 使用回溯法查找是否有解
+                    hasSolution = findSolution(numbers, numCount, targetNumber, solutionIndices);
+                }
+                
+                // 如果没有解，重新生成数字
+                if (!hasSolution) {
+                    numbers = [];
+                    for (let i = 0; i < count; i++) {
+                        let num;
+                        do {
+                            num = Math.floor(Math.random() * 8) + 2; // 2-9的随机数
+                        } while (num === targetNumber); // 确保不等于目标数字
+                        numbers.push(num);
+                    }
+                }
+                
+                attempts++;
+            }
+            
+            // 如果仍然没有找到解，添加一些更可能形成解的数字
+            if (!hasSolution) {
+                // 添加两个较小的数字，使它们的和等于目标数字
+                const num1 = Math.floor(Math.random() * (targetNumber - 3)) + 2; // 2到(targetNumber-2)的随机数
+                const num2 = targetNumber - num1;
+                
+                // 确保两个数字都符合要求
+                if (num2 >= 2 && num2 <= 9 && num2 !== targetNumber) {
+                    // 移除两个现有的数字并添加这两个新数字
+                    numbers.splice(0, 2);
+                    numbers.push(num1, num2);
+                }
+            }
+            
+            // 设置最终目标数字
+            // targetNumber已经在上面计算好了，不需要额外赋值
+            
+            // 显示游戏信息
+            document.getElementById('targetNumber').textContent = targetNumber;
+            document.getElementById('currentSum').textContent = '0';
+            
+            // 创建数字卡片
+            const container = document.getElementById('numbersContainer');
+            container.innerHTML = '';
+            
+            numbers.forEach((number, index) => {
+                const card = document.createElement('div');
+                card.className = 'number-card';
+                card.textContent = number;
+                card.dataset.index = index;
+                card.dataset.value = number;
+                
+                // 添加点击和触摸事件处理
+                const handleCardInteraction = function() {
+                    if (gameWon) return;
                     
-                    // 随机位置
-                    const leftPosition = Math.random() * 100;
-                    confetti.style.left = `${leftPosition}%`;
+                    if (this.classList.contains('selected')) {
+                        // 取消选择
+                        this.classList.remove('selected');
+                        const idx = selectedNumbers.indexOf(index);
+                        if (idx > -1) {
+                            selectedNumbers.splice(idx, 1);
+                        }
+                    } else {
+                        // 选择数字
+                        this.classList.add('selected');
+                        selectedNumbers.push(index);
+                    }
                     
-                    // 随机颜色
-                    const colorIndex = Math.floor(Math.random() * colors.length);
-                    confetti.style.backgroundColor = colors[colorIndex];
-                    
-                    // 随机大小
-                    const size = Math.random() * 10 + 5;
-                    confetti.style.width = `${size}px`;
-                    confetti.style.height = `${size}px`;
-                    
-                    // 随机动画时长
-                    const duration = Math.random() * 2 + 2;
-                    confetti.style.animationDuration = `${duration}s`;
-                    
-                    // 随机延迟
-                    const delay = Math.random() * 0.5;
-                    confetti.style.animationDelay = `${delay}s`;
-                    
-                    confettiContainer.appendChild(confetti);
-                    
-                    // 动画结束后移除元素
-                    setTimeout(() => {
-                        confetti.remove();
-                    }, (duration + delay) * 1000);
-                }, i * 10); // 每个纸屑延迟10ms出现
+                    updateCurrentSum();
+                };
+                
+                // 添加点击事件（桌面端）
+                card.addEventListener('click', handleCardInteraction);
+                
+                // 添加触摸事件（移动端）
+                card.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // 防止触摸事件触发点击事件
+                    handleCardInteraction.call(this);
+                }, { passive: false });
+                
+                container.appendChild(card);
+            });
+            
+            // 重置消息
+            updateMessage('选择一些数字，使它们的和等于目标数字', 'info');
+        }
+
+        // 更新当前和
+        function updateCurrentSum() {
+            let sum = 0;
+            for (const index of selectedNumbers) {
+                sum += numbers[index];
+            }
+            
+            document.getElementById('currentSum').textContent = sum;
+            
+            // 如果当前和等于目标数字，显示成功消息
+            // if (sum === targetNumber && selectedNumbers.length > 0) {
+            //     // updateMessage('太棒了！你找到了正确的组合！点击"检查答案"确认', 'success');
+            // } else 
+            if (sum > targetNumber) {
+                updateMessage('当前和已经超过目标数字，请取消选择一些数字', 'error');
+            } else {
+                updateMessage('继续选择数字，使它们的和等于目标数字', 'info');
             }
         }
 
-        // 生成随机题目
-        function generateQuestions() {
-            questions = [];
-            const container = document.getElementById('questionsContainer');
-            container.innerHTML = '';
-            document.getElementById('scoreDisplay').textContent = '';
+        // 更新消息
+        function updateMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+        }
 
-            for (let i = 1; i <= 6; i++) {
-                // 随机选择加法或减法
-                const isAddition = Math.random() < 0.5;
-                let num1, num2, answer, operator;
-
-                if (isAddition) {
-                    // 加法：确保结果不超过10
-                    num1 = Math.floor(Math.random() * 11);
-                    num2 = Math.floor(Math.random() * (11 - num1));
-                    answer = num1 + num2;
-                    operator = '+';
-                } else {
-                    // 减法：确保结果不为负数
-                    num1 = Math.floor(Math.random() * 11);
-                    num2 = Math.floor(Math.random() * (num1 + 1));
-                    answer = num1 - num2;
-                    operator = '-';
-                }
-
-                // 存储题目信息
-                questions.push({
-                    num1,
-                    num2,
-                    operator,
-                    answer
-                });
-
-                // 创建题目卡片
-                const questionCard = document.createElement('div');
-                questionCard.className = 'question-card';
-                questionCard.id = `question-${i}`;
-
-                questionCard.innerHTML = `
-                    <div class="question">
-                        <span class="question-number">${i}.</span>
-                        <span>${num1} ${operator} ${num2} =</span>
-                        <input type="number" class="answer-input" id="answer-${i}" placeholder="?">
-                    </div>
-                    <div class="result" id="result-${i}"></div>
-                `;
-
-                container.appendChild(questionCard);
+        // 处理按钮点击
+        function handleAction() {
+            if (gameWon) {
+                // 如果游戏已胜利，点击"再来一次"则重置游戏
+                resetGame();
+            } else {
+                // 否则检查答案
+                checkSolution();
             }
         }
 
         // 检查答案
-        function checkAnswers() {
-            let correctCount = 0;
-            
-            for (let i = 1; i <= 6; i++) {
-                const userAnswer = parseInt(document.getElementById(`answer-${i}`).value);
-                const question = questions[i-1];
-                const questionCard = document.getElementById(`question-${i}`);
-                const answerInput = document.getElementById(`answer-${i}`);
-                const resultDiv = document.getElementById(`result-${i}`);
-                
-                // 移除之前的状态
-                questionCard.classList.remove('correct', 'incorrect');
-                answerInput.classList.remove('correct', 'incorrect');
-                
-                if (userAnswer === question.answer) {
-                    correctCount++;
-                    questionCard.classList.add('correct');
-                    answerInput.classList.add('correct');
-                    resultDiv.innerHTML = '<span class="correct-result">✓ 正确</span>';
-                } else {
-                    questionCard.classList.add('incorrect');
-                    answerInput.classList.add('incorrect');
-                    resultDiv.innerHTML = `<span class="incorrect-result">✗ 错误，正确答案是 ${question.answer}</span>`;
-                }
+        function checkSolution() {
+            let sum = 0;
+            for (const index of selectedNumbers) {
+                sum += numbers[index];
             }
             
-            // 显示得分
-            const scoreDisplay = document.getElementById('scoreDisplay');
-            scoreDisplay.textContent = `得分: ${correctCount}/6`;
-            
-            // 根据得分显示不同的鼓励信息
-            if (correctCount === 6) {
-                scoreDisplay.textContent += ' 太棒了！全部正确！🎉';
-                // 触发撒花特效
-                createConfetti();
-            } else if (correctCount >= 4) {
-                scoreDisplay.textContent += ' 做得不错！继续努力！👍';
-            } else if (correctCount >= 3) {
-                scoreDisplay.textContent += ' 还可以，再接再厉！💪';
+            if (sum === targetNumber && selectedNumbers.length > 0) {
+                // 成功
+                gameWon = true;
+                updateMessage('恭喜你！你赢了！🎉', 'success');
+                
+                // 添加胜利动画
+                document.querySelector('.container').classList.add('winner');
+                
+                // 随机选择一个特效（撒花或烟花）
+                if (Math.random() > 0.5) {
+                    // 触发撒花特效
+                    createConfetti();
+                } else {
+                    // 触发烟花特效
+                    createFireworks();
+                }
+                
+                // 更改按钮文本为"再来一次"
+                document.getElementById('actionButton').textContent = '再来一次';
+                
+                // 移除动画类
+                setTimeout(() => {
+                    document.querySelector('.container').classList.remove('winner');
+                }, 1500);
+            } else if (selectedNumbers.length === 0) {
+                // 失败 - 没有选择数字
+                updateMessage('请至少选择一个数字', 'error');
             } else {
-                scoreDisplay.textContent += ' 需要多加练习哦！📚';
+                // 失败 - 和不相等
+                updateMessage(`当前和是 ${sum}，不等于目标数字 ${targetNumber}，请继续尝试`, 'error');
             }
         }
 
-        // 页面加载时生成题目
+        // 重置游戏
+        function resetGame() {
+            // 重置按钮文本
+            document.getElementById('actionButton').textContent = '检查答案';
+            
+            // 初始化新游戏
+            initGame();
+        }
+
+        // 页面加载时初始化游戏
         window.onload = function() {
-            generateQuestions();
+            initGame();
+            
+            // 为按钮添加点击和触摸事件监听器
+            const actionButton = document.getElementById('actionButton');
+            
+            // 添加点击事件（桌面端）
+            actionButton.addEventListener('click', handleAction);
+            
+            // 添加触摸事件（移动端）
+            actionButton.addEventListener('touchstart', function(e) {
+                e.preventDefault(); // 防止触摸事件触发点击事件
+                handleAction();
+            }, { passive: false });
         };
     </script>
 </body>
