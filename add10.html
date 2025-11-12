@@ -296,10 +296,10 @@
             <div class="current-sum">当前和: <span id="currentSum">0</span></div>
         </div>
 
-        <div class="message info" id="message">选择一些数字，使它们的和等于目标数字</div>
+        <div class="message info" id="message">请选择数字</div>
 
         <div class="controls">
-            <button id="actionButton">检查答案</button>
+            <button id="actionButton">确认</button>
         </div>
 
         <div class="numbers-container" id="numbersContainer">
@@ -482,7 +482,7 @@
             });
             
             // 重置消息
-            updateMessage('选择一些数字，使它们的和等于目标数字', 'info');
+            updateMessage('请选择数字', 'info');
         }
 
         // 更新当前和
@@ -498,11 +498,12 @@
             // if (sum === targetNumber && selectedNumbers.length > 0) {
             //     // updateMessage('太棒了！你找到了正确的组合！点击"检查答案"确认', 'success');
             // } else 
-            if (sum > targetNumber) {
+            if (sum > targetNumber && selectedNumbers.length >= 4) {
                 updateMessage('当前和已经超过目标数字，请取消选择一些数字', 'error');
-            } else {
-                updateMessage('继续选择数字，使它们的和等于目标数字', 'info');
-            }
+                return
+            } 
+            updateMessage('请选择数字', 'info');
+            return
         }
 
         // 更新消息
@@ -566,7 +567,7 @@
         // 重置游戏
         function resetGame() {
             // 重置按钮文本
-            document.getElementById('actionButton').textContent = '检查答案';
+            document.getElementById('actionButton').textContent = '确认';
             
             // 初始化新游戏
             initGame();

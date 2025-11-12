@@ -236,7 +236,7 @@
     <div class="container">
         <header>
             <h1>选择减法游戏</h1>
-            <p class="subtitle">可按任意顺序选择；系统以最大值为被减数，其他为减数，使差等于目标数。</p>
+            <p class="subtitle">选择数字，使它们的差等于目标数</p>
         </header>
 
         <div class="nav-controls">
@@ -248,10 +248,10 @@
             <div class="current-diff">当前差: <span id="currentDiff">0</span></div>
         </div>
 
-        <div class="message info" id="message">可任意顺序选择；当前差以最大值为被减数计算</div>
+        <div class="message info" id="message">请选择</div>
 
         <div class="controls">
-            <button id="actionButton">检查答案</button>
+            <button id="actionButton">确认</button>
         </div>
 
         <div class="numbers-container" id="numbersContainer"></div>
@@ -299,39 +299,50 @@
             return false;
         }
 
+        function randomNumbers(count) {
+            // 生成随机数字 (count 个，范围 0-9)
+            numbers = [];
+            for (let i = 0; i < count; i++) {
+                numbers.push(Math.floor(Math.random() * 10));
+            }
+            return numbers;
+        }
+
         function initGame() {
             selectedIndices = [];
             gameWon = false;
 
-            // 目标数字尽量在 2-8，确保有正差
+            // 目标数字尽量在 0-8，确保有正差
             do {
-                targetNumber = Math.floor(Math.random() * 7) + 2; // 2-8
+                targetNumber = Math.floor(Math.random() * 9) ; // 0-8
             } while (targetNumber === previousTargetNumber);
             previousTargetNumber = targetNumber;
 
-            // 生成随机数字 (6-9 个，范围 2-9)
-            const count = Math.floor(Math.random() * 4) + 6;
-            numbers = [];
-            for (let i = 0; i < count; i++) {
-                numbers.push(Math.floor(Math.random() * 8) + 2);
-            }
+            // 生成随机数字 (6 个，范围 0-9)
+            numbers =randomNumbers(6)
 
-            // 确保至少存在一个解（2-4 个数字，含 1 个被减数 + 若干减数）
+            // 确保至少存在一个解（2-2 个数字，含 1 个被减数 + 若干减数）
             const solution = [];
             let attempts = 0;
-            while (!findDifferenceSolution(numbers, 2, 4, targetNumber, solution) && attempts < 20) {
+            while (!findDifferenceSolution(numbers, 2, 2, targetNumber, solution) && attempts < 20) {
                 // 重新生成一组数字再试
-                numbers = [];
-                const c = Math.floor(Math.random() * 4) + 6;
-                for (let i = 0; i < c; i++) numbers.push(Math.floor(Math.random() * 8) + 2);
+                numbers =randomNumbers(6)
                 attempts++;
             }
+           
+            if (attempts >= 20) {
+                numbers.push(targetNumber+1,1);
+            }
+            console.log('attempts', attempts);
+            console.log('solution', solution);
+            console.log('numbers', numbers);
+
             document.getElementById('targetNumber').textContent = targetNumber;
             renderNumbers();
             updateCurrentDiff();
-            updateMessage('info', '可任意顺序选择；系统以最大值为被减数计算当前差');
+            updateMessage('info','请选择');
             const btn = document.getElementById('actionButton');
-            btn.textContent = '检查答案';
+            btn.textContent = '确认';
             btn.className = '';
         }
 
@@ -396,21 +407,17 @@
 
         function updateGuidance() {
             const diff = computeDiff();
-            if (selectedIndices.length === 0) {
-                updateMessage('info', '先选择至少 2 个数字；最大值将作为被减数');
-                return;
-            }
-            if (selectedIndices.length === 1) {
-                updateMessage('info', '再选择一些数字作为减数（当前最大值为被减数）');
-                return;
-            }
-            if (diff === targetNumber) {
-                updateMessage('success', '当前差等于目标，点击“检查答案”');
-            } else if (diff > targetNumber) {
+           
+            if (diff > targetNumber && selectedIndices.length >= 4) {
                 updateMessage('error', '当前差大于目标，尝试增加减数或选择较小的被减数');
-            } else {
+                return
+            } else if (diff < targetNumber && selectedIndices.length >= 4) {
                 updateMessage('error', '当前差小于目标，尝试减少减数之和或选择更大的被减数');
+                return
             }
+            updateMessage('info', '请选择');
+            return
+
         }
 
         function updateMessage(type, text) {
